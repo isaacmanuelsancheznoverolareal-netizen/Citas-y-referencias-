@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APA 7 · Groq — ABRAXAS MATRIX EDITION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;500;600;700;800;900&family=VT323&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg: #000800;
+      --card: rgba(0,18,0,0.82);
+      --border: rgba(0,255,65,0.13);
+      --border-h: rgba(0,255,65,0.5);
+      --text: #c8ffc8; --muted: #4dbb4d; --inv: #001200;
+      --accent: #00ff41;
+      --grad: linear-gradient(135deg,#00ff41 0%,#00cc33 100%);
+      --glow: rgba(0,255,65,0.35);
+      --ok: #00ff41; --warn: #ffe000; --err: #ff3131;
+      --side: 265px;
+      --shad: 0 0 18px rgba(0,255,65,0.15), 0 10px 25px -5px rgba(0,0,0,.6);
+    }
+
+    .matrix-edition-badge {
+      display: inline-block;
+      font-family: 'Orbitron', sans-serif;
+      font-size: .62rem;
+      font-weight: 900;
+      letter-spacing: .25em;
+      color: #00d4ff;
+      text-shadow: 0 0 4px #00d4ff, 0 0 10px #00aaff, 0 0 22px #007fff, 0 0 40px #005fcc;
+      background: rgba(0, 80, 160, 0.18);
+      border: 1px solid rgba(0, 180, 255, 0.35);
+      border-radius: 4px;
+      padding: .15em .55em .12em;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 0 8px rgba(0,180,255,0.25), inset 0 0 6px rgba(0,120,220,0.12);
+      margin-top: .18em;
+    }
+
+    [data-theme="light"] {
+      --bg: #001a00;
+      --card: rgba(0,30,0,0.90); --border: rgba(0,255,65,0.2);
+      --border-h: rgba(0,255,65,0.6); --text: #e0ffe0; --muted: #66cc66;
+      --accent: #00ff41; --grad: linear-gradient(135deg,#00ff41 0%,#00ee33 100%);
+      --glow: rgba(0,255,65,0.25); --shad: 0 0 12px rgba(0,255,65,0.12);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Share Tech Mono',monospace;scrollbar-width:thin;scrollbar-color:var(--accent) rgba(0,0,0,.1);}
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px;}
+    body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow:hidden;transition:background .3s,color .3s;}
+
+    #sidebar{width:var(--side);background:rgba(0,8,0,.92);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;flex-shrink:0;}
+    [data-theme="light"] #sidebar{background:rgba(0,12,0,.95);}
+    .brand{padding:1rem .8rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;border-bottom:1px solid var(--border);}
+    .brand img{width:100%;max-width:230px;height:auto;display:block;filter:drop-shadow(0 0 12px rgba(0,255,65,0.65));}
+    .brand h1{text-align:center;font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .nav-menu{padding:.9rem .7rem;display:flex;flex-direction:column;gap:.3rem;flex-grow:1;overflow-y:auto;}
+    .nav-sep{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:.5rem .7rem .15rem;opacity:.5;}
+    .nav-btn{display:flex;align-items:center;gap:.7rem;padding:.6rem .85rem;border-radius:9px;color:var(--muted);cursor:pointer;transition:all .18s;background:transparent;border:none;}
+    .nav-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+    .nav-btn:hover,.nav-btn.active{color:var(--accent);background:rgba(0,255,65,.08);text-shadow:0 0 8px rgba(0,255,65,.6);}
+    .nav-btn.active{border-left:3px solid var(--accent);border-radius:3px 9px 9px 3px;}
+    .sidebar-foot{padding:1rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.75rem;}
+    .api-pill{background:rgba(0,0,0,.2);border-radius:7px;padding:.55rem .8rem;font-size:.75rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+    [data-theme="light"] .api-pill{background:rgba(0,0,0,.05);}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--err);box-shadow:0 0 6px var(--err);transition:all .3s;flex-shrink:0;}
+    .dot.on{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+    .theme-row{display:flex;align-items:center;justify-content:space-between;font-size:.8rem;color:var(--muted);}
+    .sw{position:relative;display:inline-block;width:40px;height:20px;}
+    .sw input{opacity:0;width:0;height:0;}
+    .sl{position:absolute;cursor:pointer;inset:0;background:#374151;transition:.35s;border-radius:34px;}
+    [data-theme="light"] .sl{background:#d1d5db;}
+    .sl:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:#fff;transition:.35s;border-radius:50%;}
+    input:checked+.sl{background-image:var(--grad);}
+    input:checked+.sl:before{transform:translateX(20px);}
+
+    #main{flex-grow:1;height:100vh;overflow-y:auto;padding:1.75rem 2rem;display:flex;flex-direction:column;gap:1.5rem;}
+    .page{display:none;flex-direction:column;gap:1.4rem;animation:fadeUp .25s ease forwards;}
+    .page.active{display:flex;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+    .ph{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;}
+    .ph h2{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:700;letter-spacing:-.3px;}
+    .ph .sub{font-size:.85rem;color:var(--muted);margin-top:.15rem;}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:var(--shad);backdrop-filter:blur(16px);}
+    .card-sm{padding:1.1rem 1.3rem;}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;}
+    .g3{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;}
+    @media(max-width:800px){.g2{grid-template-columns:1fr;}}
+
+    .fg{display:flex;flex-direction:column;gap:.4rem;}
+    .fg label{font-size:.8rem;font-weight:600;color:var(--muted);}
+    .fg .opt{font-weight:400;font-size:.73rem;opacity:.6;}
+    .fi{background:rgba(0,20,0,.45);border:1px solid var(--border);border-radius:8px;padding:.65rem .9rem;color:var(--text);font-size:.9rem;transition:border-color .2s;width:100%;}
+    [data-theme="light"] .fi{background:rgba(0,25,0,.5);}
+    .fi:focus{outline:none;border-color:var(--accent);}
+    textarea.fi{resize:vertical;min-height:100px;}
+    select.fi option{background:#000e00;}
+
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.65rem 1.25rem;border-radius:8px;font-weight:600;cursor:pointer;transition:all .18s;border:none;}
+    .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+    .btn-p{background:var(--grad);color:#fff;box-shadow:0 3px 10px var(--glow);}
+    .btn-p:hover{transform:translateY(-1px);box-shadow:0 5px 14px var(--glow);}
+    .btn-p:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+    .btn-s{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);}
+    .btn-s:hover{background:rgba(255,255,255,.09);border-color:var(--muted);}
+    .btn-ok{background:var(--ok);color:#fff;}
+    .btn-err{background:var(--err);color:#fff;}
+    .btn-sm{padding:.38rem .8rem;font-size:.78rem;}
+    .btn-xs{padding:.25rem .6rem;font-size:.72rem;}
+    .back-btn{display:inline-flex;align-items:center;gap:.35rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:.4rem .85rem;border-radius:7px;cursor:pointer;}
+    .back-btn:hover{border-color:var(--accent);color:var(--text);}
+    .back-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;}
+
+    .drop{border:2px dashed var(--border);border-radius:10px;padding:.9rem 1rem;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.4rem;transition:all .2s;}
+    .drop:hover,.drop.drag-on{border-color:var(--accent);background:rgba(0,255,65,.04);}
+    .drop svg{width:26px;height:26px;stroke:var(--muted);fill:none;stroke-width:2;}
+    .drop p{font-size:.78rem;color:var(--muted);}
+    .drop strong{font-size:.8rem;color:var(--text);}
+    .drop.pdf-drop{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.03);}
+    .drop.pdf-drop:hover,.drop.pdf-drop.drag-on{border-color:var(--ok);background:rgba(16,185,129,.05);}
+
+    .quote-area{background:rgba(0,255,65,.04);border:1px solid rgba(0,255,65,.2);border-radius:9px;padding:.9rem 1rem;display:flex;flex-direction:column;gap:.45rem;}
+    .quote-area label{font-size:.75rem;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;}
+    [data-theme="light"] .quote-area{background:rgba(0,255,65,.03);}
+
+    .meta-row{display:grid;grid-template-columns:120px 1fr;gap:.4rem;align-items:baseline;padding:.18rem 0;border-bottom:.5px solid rgba(0,255,65,.07);}
+    .meta-key{font-size:.75rem;font-weight:700;color:var(--muted);white-space:nowrap;}
+    .meta-val{font-size:.82rem;color:var(--text);word-break:break-word;line-height:1.4;}
+
+    .spin-wrap{display:none;flex-direction:column;align-items:center;justify-content:center;gap:.85rem;padding:2rem;background:var(--card);border-radius:14px;border:1px solid var(--border);}
+    .spinner{width:40px;height:40px;border:4px dashed var(--accent);border-radius:50%;animation:spin 1.4s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .prog-wrap{display:none;flex-direction:column;gap:.5rem;}
+    .prog-bar{height:6px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+    .prog-fill{height:100%;background:var(--grad);border-radius:4px;transition:width .3s;width:0%;}
+    .prog-label{font-size:.75rem;color:var(--muted);}
+
+    .src-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;display:flex;gap:.85rem;align-items:flex-start;cursor:pointer;transition:all .2s;}
+    .src-card:hover{border-color:var(--border-h);transform:translateY(-2px);}
+    .src-card.selected{border-color:var(--accent);background:rgba(0,255,65,.06);}
+    .src-thumb{width:44px;height:58px;border-radius:5px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem;}
+    .src-info{flex:1;min-width:0;}
+    .src-title{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .src-meta{font-size:.74rem;color:var(--muted);margin-top:.18rem;}
+    .src-badges{display:flex;gap:.4rem;margin-top:.4rem;flex-wrap:wrap;}
+    .badge{font-size:.67rem;font-weight:600;text-transform:uppercase;padding:.18rem .5rem;border-radius:5px;background:rgba(0,255,65,.08);color:var(--accent);border:1px solid rgba(0,255,65,.18);}
+    .badge.ok{background:rgba(16,185,129,.1);color:var(--ok);border-color:rgba(16,185,129,.2);}
+
+    .result-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem 1.3rem;display:flex;flex-direction:column;gap:.85rem;}
+    .result-text{font-size:.92rem;line-height:1.75;font-family:'Share Tech Mono',monospace;padding:.75rem .95rem;background:rgba(0,0,0,.15);border-left:3px solid var(--accent);border-radius:0 7px 7px 0;}
+    .cite-chip{padding:.3rem .7rem;border-radius:6px;border:1px solid var(--border);font-size:.75rem;cursor:pointer;transition:all .15s;color:var(--muted);}
+    .cite-chip:hover{border-color:var(--accent);color:var(--text);}
+    .cite-chip.active{background:rgba(0,255,65,.1);border-color:var(--accent);color:var(--accent);font-weight:600;}
+
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);z-index:1000;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+    .overlay.open{display:flex;}
+    .modal{background:#000e00;border:1px solid var(--border-h);border-radius:18px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;}
+    .modal-head{padding:1.25rem 1.6rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .modal-body{padding:1.4rem 1.6rem;display:flex;flex-direction:column;gap:1.1rem;flex-grow:1;}
+    .modal-foot{padding:1rem 1.6rem;border-top:1px solid var(--border);display:flex;gap:.65rem;flex-wrap:wrap;flex-shrink:0;}
+
+    .empty{text-align:center;padding:2.5rem;color:var(--muted);border:1px dashed var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:.75rem;}
+
+    .set-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;max-width:580px;display:flex;flex-direction:column;gap:1.1rem;}
+
+    .nav-count{margin-left:auto;font-size:.7rem;background:rgba(0,255,65,.1);color:var(--accent);padding:.1rem .45rem;border-radius:10px;font-weight:700;}
+    .tok-meter{display:flex;align-items:center;gap:.6rem;font-size:.74rem;color:var(--muted);padding:.45rem .75rem;background:rgba(0,0,0,.15);border-radius:7px;border:1px solid var(--border);}
+    .tok-meter strong{color:var(--ok);}
+
+    #toast-c{position:fixed;bottom:1.5rem;right:1.5rem;display:flex;flex-direction:column;gap:.55rem;z-index:9999;}
+    .toast{background:rgba(0,12,0,.97);border-left:4px solid var(--accent);color:#fff;padding:.75rem 1.1rem;border-radius:7px;box-shadow:0 4px 12px rgba(0,0,0,.5);font-size:.8rem;font-weight:500;}
+    .toast.ok{border-left-color:var(--ok);}
+    .toast.err{border-left-color:var(--err);}
+
+    body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);}
+    #sidebar,#main{position:relative;z-index:1;}
+  </style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<aside id="sidebar">
+  <div class="brand" style="flex-direction:column;align-items:center;padding:1rem .8rem;gap:.5rem;">
+    <h1 style="text-align:center;font-size:.95rem;letter-spacing:.15em;">ABRAXAS<br><span class="matrix-edition-badge">MATRIX EDITION</span></h1>
+  </div>
+  <nav class="nav-menu">
+    <div class="nav-sep">Principal</div>
+    <button class="nav-btn active" onclick="goTo('search')" id="nav-search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      Buscar en libros
+      <span class="nav-count" id="lib-count-nav">0</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('addbook')" id="nav-addbook">
+      <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+      Agregar libro
+    </button>
+    <div class="nav-sep">Citas y Referencias</div>
+    <button class="nav-btn" onclick="goTo('refs')" id="nav-refs">
+      <svg viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      Mis referencias
+      <span class="nav-count" id="ref-count-nav">0</span>
+    </button>
+    <div class="nav-sep">Sistema</div>
+    <button class="nav-btn" onclick="goTo('settings')" id="nav-settings">
+      <svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      API / Groq
+    </button>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="api-pill">
+      <span>Groq</span>
+      <div class="dot" id="api-dot"></div>
+    </div>
+    <div class="theme-row">
+      <span>Modo claro</span>
+      <label class="sw"><input type="checkbox" id="theme-chk" onchange="toggleTheme()"><span class="sl"></span></label>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════ MAIN ═══════ -->
+<main id="main">
+  <div id="toast-c"></div>
+
+  <!-- ══ AGREGAR LIBRO ══ -->
+  <div id="page-addbook" class="page active">
+    <div class="ph">
+      <div><h2>Agregar libros a la biblioteca</h2>
+      <p class="sub">PDF + EPUB: Si subes ambos con el mismo nombre, usará el PDF automáticamente.</p></div>
+    </div>
+
+    <div class="card">
+      <div class="fg" style="margin-bottom:1.2rem;">
+        <label>PDF del libro <span class="opt">(arrastra o haz clic)</span></label>
+        <div class="drop pdf-drop" id="book-pdf-drop">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          <strong>Arrastra el PDF o EPUB aquí, o haz clic</strong>
+          <p id="book-pdf-label">PDF · EPUB — Máx 500MB</p>
+          <input type="file" id="book-pdf-input" style="display:none;" accept="application/pdf,.epub,application/epub+zip">
+        </div>
+        <div class="prog-wrap" id="book-prog">
+          <div class="prog-bar"><div class="prog-fill" id="book-prog-fill"></div></div>
+          <span class="prog-label" id="book-prog-label">Procesando...</span>
+        </div>
+      </div>
+      <div class="g2" style="margin-bottom:1rem;">
+        <div class="fg"><label>Título</label><input type="text" id="b-title" class="fi" placeholder="Título"></div>
+        <div class="fg"><label>Autor</label><input type="text" id="b-author" class="fi" placeholder="Autor"></div>
+      </div>
+      <div style="display:flex;gap:.75rem;">
+        <button class="btn btn-p" onclick="addBook()" id="btn-add-book" disabled>Guardar libro</button>
+      </div>
+    </div>
+
+    <div id="books-list" style="display:flex;flex-direction:column;gap:.75rem;"></div>
+  </div>
+
+  <!-- ══ MIS REFERENCIAS ══ -->
+  <div id="page-refs" class="page" style="display:none;">
+    <div class="ph">
+      <div><h2>Mis referencias</h2><p class="sub">Referencias guardadas</p></div>
+      <div style="display:flex;gap:.6rem;">
+        <button class="btn btn-s btn-sm" onclick="copyAllRefs()">Copiar</button>
+        <button class="btn btn-err btn-sm" onclick="clearRefs()">🗑️ Borrar TODO</button>
+      </div>
+    </div>
+    <div id="refs-list" style="display:flex;flex-direction:column;gap:.9rem;"></div>
+    <div class="empty" id="refs-empty">
+      <h3>Sin referencias</h3>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS ══ -->
+  <div id="page-settings" class="page" style="display:none;">
+    <div class="ph"><div><h2>Configuración</h2></div></div>
+    <div class="set-box">
+      <button class="btn btn-err" onclick="clearRefs()">🗑️ BORRAR TODO DE MANERA PROFUNDA (IRREVERSIBLE)</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     UTILIDADES: FILE HANDLER + DEDUPLICACIÓN + BORRADO PROFUNDO
+     ════════════════════════════════════════════════════════════════════════════ -->
+<script>
+// ════ FILE HANDLER UTILS ════
+const FileHandlerUtils = {
+  validarArchivo(file) {
+    const tiposValidos = ['application/pdf', 'application/epub+zip'];
+    const tamaño MaxMB = 500;
+    const tamaño Bytes = file.size;
+    const tamaño MB = tamaño Bytes / (1024 * 1024);
+    const extension = file.name.split('.').pop().toLowerCase();
+
+    const errores = [];
+    if (!tiposValidos.includes(file.type) && !['pdf', 'epub'].includes(extension)) {
+      errores.push(`Tipo no soportado: ${file.type}`);
+    }
+    if (tamaño MB > tamaño MaxMB) {
+      errores.push(`Archivo muy grande: ${tamaño MB.toFixed(2)}MB`);
+    }
+    if (tamaño Bytes === 0) {
+      errores.push('Archivo vacío');
+    }
+    return { valido: errores.length === 0, errores };
+  },
+
+  obtenerNombreBase(nombreArchivo) {
+    return nombreArchivo.replace(/\.[^/.]+$/, '').toLowerCase().trim();
+  },
+
+  detectarTipo(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    return ext === 'pdf' ? 'pdf' : ext === 'epub' ? 'epub' : 'desconocido';
+  },
+
+  async manejarPdfEpubDuplicados(archivos) {
+    const agrupados = {};
+    const archivosFinales = [];
+
+    for (const file of archivos) {
+      const nombreBase = this.obtenerNombreBase(file.name);
+      if (!agrupados[nombreBase]) {
+        agrupados[nombreBase] = [];
+      }
+      agrupados[nombreBase].push(file);
+    }
+
+    for (const [nombreBase, archivosGrupo] of Object.entries(agrupados)) {
+      const tienePdf = archivosGrupo.some(f => this.detectarTipo(f) === 'pdf');
+      const tieneEpub = archivosGrupo.some(f => this.detectarTipo(f) === 'epub');
+
+      if (tienePdf && tieneEpub) {
+        const pdf = archivosGrupo.find(f => this.detectarTipo(f) === 'pdf');
+        archivosFinales.push(pdf);
+        toast(`✓ "${nombreBase}": Usando PDF (descartado EPUB)`, 'ok');
+      } else {
+        archivosFinales.push(archivosGrupo[0]);
+      }
+    }
+
+    return archivosFinales;
+  }
+};
+
+// ════ INDEXEDDB UTILS ════
+const IndexedDBUtils = {
+  async borrarTodo(db) {
+    if (!db) throw new Error('BD no inicializada');
+
+    try {
+      const objetosStore = ['books', 'chunks', 'references', 'search_history'];
+      const tx = db.transaction(objetosStore, 'readwrite');
+
+      for (const store of objetosStore) {
+        try {
+          await tx.objectStore(store).clear();
+        } catch (e) {
+          console.warn(`No se pudo limpiar ${store}`);
+        }
+      }
+
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve;
+        tx.onerror = reject;
+      });
+
+      // Limpiar LocalStorage
+      ['abraxas_books', 'abraxas_chunks', 'abraxas_refs', 'abraxas_search_hist'].forEach(key => 
+        localStorage.removeItem(key)
+      );
+
+      sessionStorage.clear();
+      
+      toast('✓ TODO BORRADO - Recargando...', 'ok');
+      setTimeout(() => location.reload(), 2000);
+
+      return true;
+    } catch (error) {
+      toast('Error: ' + error.message, 'err');
+      return false;
+    }
+  }
+};
+
+// ════ FUNCIÓN PRINCIPAL DE BORRADO PROFUNDO ════
+async function clearRefs() {
+  const confirmacion = prompt(`⚠️ ADVERTENCIA: IRREVERSIBLE
+  
+Se eliminarán TODO:
+  • Todas las referencias
+  • Todos los libros
+  • Todo el historial
+  • Todos los datos
+
+Escriba: "BORRAR TODO" para confirmar`);
+
+  if (confirmacion !== 'BORRAR TODO') {
+    toast('Cancelado: Datos protegidos', 'warn');
+    return;
+  }
+
+  try {
+    const spinWrap = document.getElementById('book-prog');
+    if (spinWrap) {
+      spinWrap.style.display = 'flex';
+      spinWrap.innerHTML = `
+        <div class="spinner"></div>
+        <div style="color:#ff3131;font-weight:bold;">🗑️ BORRANDO TODO...</div>
+      `;
+    }
+
+    if (window.db) {
+      await IndexedDBUtils.borrarTodo(window.db);
+    } else {
+      await new Promise((resolve, reject) => {
+        const req = indexedDB.deleteDatabase('AbraxasDB');
+        req.onsuccess = resolve;
+        req.onerror = reject;
+      });
+      toast('✓ TODO BORRADO - Recargando...', 'ok');
+      setTimeout(() => location.reload(), 2000);
+    }
+  } catch (error) {
+    toast('Error: ' + error.message, 'err');
+  }
+}
+
+// ════ FUNCIÓN TOAST ════
+function toast(msg, tipo = 'ok') {
+  const toastC = document.getElementById('toast-c');
+  const el = document.createElement('div');
+  el.className = `toast ${tipo}`;
+  el.textContent = msg;
+  toastC.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ════ FUNCIÓN NAVIGATION ════
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(`page-${page}`);
+  if (el) el.classList.add('active');
+}
+
+// ════ FILE UPLOAD HANDLER ════
+document.getElementById('book-pdf-input')?.addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  // Validar archivos
+  for (const file of files) {
+    const validacion = FileHandlerUtils.validarArchivo(file);
+    if (!validacion.valido) {
+      toast(`❌ ${file.name}: ${validacion.errores[0]}`, 'err');
+      return;
+    }
+  }
+
+  // Deduplicar
+  const archivosFinales = await FileHandlerUtils.manejarPdfEpubDuplicados(files);
+  
+  if (archivosFinales.length > 0) {
+    const file = archivosFinales[0];
+    document.getElementById('b-title').value = FileHandlerUtils.obtenerNombreBase(file.name);
+    toast(`✓ ${file.name} cargado`, 'ok');
+  }
+});
+
+// Drag & drop
+const dropZone = document.getElementById('book-pdf-drop');
+if (dropZone) {
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-on');
+  });
+
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-on'));
+  
+  dropZone.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-on');
+    
+    const files = Array.from(e.dataTransfer.files);
+    const archivosFinales = await FileHandlerUtils.manejarPdfEpubDuplicados(files);
+    
+    if (archivosFinales.length > 0) {
+      const file = archivosFinales[0];
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      document.getElementById('book-pdf-input').files = dataTransfer.files;
+    }
+  });
+
+  dropZone.addEventListener('click', () => document.getElementById('book-pdf-input').click());
+}
+
+// ════ FUNCIONES STUB ════
+function addBook() { toast('✓ Libro guardado (función stub)', 'ok'); }
+function copyAllRefs() { toast('✓ Copiad (función stub)', 'ok'); }
+function toggleTheme() { document.documentElement.setAttribute('data-theme', 
+  document.documentElement.getAttribute('data-theme') === 'light' ? '' : 'light'); }
+
+// Inicializar
+goTo('addbook');
+</script>
+
+</body>
+</html>
